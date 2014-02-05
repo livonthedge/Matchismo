@@ -19,5 +19,7 @@
 - (void)setMatchMode:(NSString *)matchMode;
 
 @property (nonatomic, readonly) NSInteger score;
+@property (nonatomic) NSUInteger matchNumber;
+@property (nonatomic, strong) NSString *resultString;
 
 @end

@@ -22,6 +22,13 @@
     return _cards;
 }
 
+- (NSUInteger)matchNumber {
+    if (!_matchNumber) {
+        _matchNumber = 2;
+    }
+    return _matchNumber;
+}
+
 - (instancetype)initWithCardCount:(NSUInteger)count usingDeck:(Deck *)deck
 {
     self = [super init];
@@ -53,25 +60,39 @@ static const int COST_TO_CHOOSE = 1;
 - (void)chooseCardAtIndex:(NSUInteger)index
 {
     Card *card = [self cardAtIndex:index];
+    self.resultString = [NSString stringWithFormat:@"%@", card.contents];
     
     if (!card.isMatched) {
         if (card.isChosen) {
             card.chosen = NO;
+            self.resultString = @"";
         } else {
             // Match against other chosen cards
+            NSMutableArray *otherCards = [NSMutableArray array];
             for (Card *otherCard in self.cards) {
                 if (otherCard.isChosen && !otherCard.isMatched) {
-                    int matchScore = [card match:@[otherCard]];
-                    if (matchScore) {
-                        self.score += matchScore * MATCH_BONUS;
-                        card.matched = YES;
+                    [otherCards addObject:otherCard];
+                }
+            }
+            if ([otherCards count] == self.matchNumber -1 ) {
+                int matchScore = [card match:otherCards];
+                if (matchScore) {
+                    self.score += matchScore * MATCH_BONUS;
+                    card.matched = YES;
+                    NSString *otherCardsContents = @"";
+                    for (Card *otherCard in otherCards) {
                         otherCard.matched = YES;
-                    } else {
-                        self.score -= MISMATCH_PENALTY;
+                        otherCardsContents = [otherCardsContents stringByAppendingFormat:@"%@", otherCard.contents];
+                    }
+                    self.resultString = [NSString stringWithFormat:@"Matched %@ %@ for score: %d", card.contents, otherCardsContents, matchScore * MATCH_BONUS];
+                } else {
+                    self.score -= MISMATCH_PENALTY;
+                    for (Card *otherCard in otherCards) {
                         otherCard.chosen = NO;
                     }
-                    break; // can only choose 2 cards for now
+                    self.resultString = [NSString stringWithFormat:@"Mismatch! Penalty of %d", MISMATCH_PENALTY];
                 }
+        
             }
             self.score -= COST_TO_CHOOSE;
             card.chosen = YES;

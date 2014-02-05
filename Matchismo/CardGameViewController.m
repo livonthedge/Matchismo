@@ -16,13 +16,17 @@
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *cardButtons;
 @property (weak, nonatomic) IBOutlet UILabel *scoreLabel;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *matchModeSegmentControl;
+@property (weak, nonatomic) IBOutlet UILabel *feedBackLabel;
 @end
 
 @implementation CardGameViewController
 
 - (CardMatchingGame *)game
 {
-    if (!_game) _game = [[CardMatchingGame alloc] initWithCardCount:[self.cardButtons count] usingDeck:[self createDeck]];
+    if (!_game) {
+        _game = [[CardMatchingGame alloc] initWithCardCount:[self.cardButtons count] usingDeck:[self createDeck]];
+        [self matchModeSelector:self.matchModeSegmentControl];
+    }
     return _game;
 }
 
@@ -38,11 +42,10 @@
     [self updateUI];
 }
 
-- (IBAction)selectMatchMode:(id)sender {
-    int selectedMatchModeIndex = self.matchModeSegmentControl.selectedSegmentIndex;
-    NSString *currentMatchMode = [self.matchModeSegmentControl titleForSegmentAtIndex:selectedMatchModeIndex];
-    [self.game setMatchMode:currentMatchMode];
+- (IBAction)matchModeSelector:(UISegmentedControl *)sender {
+    self.game.matchNumber = sender.selectedSegmentIndex +2;
 }
+
 
 - (IBAction)touchCardButton:(UIButton *)sender {
     int cardIndex = [self.cardButtons indexOfObject:sender];
@@ -63,6 +66,10 @@
         cardButton.enabled = !card.isMatched;
     }
     self.scoreLabel.text = [NSString stringWithFormat:@"Score: %d", self.game.score];
+    
+    if (![self.game.resultString isEqualToString:@""] && self.game.resultString) {
+        self.feedBackLabel.text = self.game.resultString;
+    }
 }
 
 - (NSString *)titleForCard:(Card *)card
